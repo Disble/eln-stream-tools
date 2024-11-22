@@ -12,7 +12,7 @@ function App() {
 
   useEffect(() => {
     const loadTextCorrectorState = async () => {
-      const canBeEnabled = (await checkPageType()) === "chapter" ? await canChaperTransformTextarea() : await canSynopsisTransformTextarea();
+      const canBeEnabled = (await checkPageType()) === "chapter" ? await canChapterTransformTextarea() : await canSynopsisTransformTextarea();
 
       setIsTextCorrectorActive(!canBeEnabled);
     };
@@ -21,7 +21,7 @@ function App() {
     ;
   }, []);
 
-  const onClick = async () => {
+  const handleTextCorrector = async () => {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 
     const isActivate = pageType === "chapter" ? await activateTextCorrectorInChapter(tab) : await activateTextCorrectorInSynopsis(tab);
@@ -34,9 +34,7 @@ function App() {
       target: { tabId: tab.id! },
       func: () => {
         let success = false;
-        document.querySelectorAll(".panel.panel-reading p[data-p-id]").forEach(p => {
-          const paragraph = p as HTMLParagraphElement;
-
+        document.querySelectorAll<HTMLParagraphElement>(".panel.panel-reading p[data-p-id]").forEach(paragraph => {
           // Eliminar el div.component-wrapper
           paragraph.removeChild(paragraph.querySelector("div.component-wrapper")!)
       
@@ -86,7 +84,7 @@ function App() {
     return await browser.scripting.executeScript({
       target: { tabId: tab.id! },
       func: () => {
-        const description: HTMLPreElement | null = document.querySelector("pre.description-text.collapsed");
+        const description = document.querySelector<HTMLPreElement>("pre.description-text.collapsed");
         
         if (!description) return false;
 
@@ -127,7 +125,7 @@ function App() {
     });
   }
 
-  const canChaperTransformTextarea = async () => {
+  const canChapterTransformTextarea = async () => {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     const result = await browser.scripting.executeScript({
       target: { tabId: tab.id! },
@@ -157,14 +155,45 @@ function App() {
     return pageType;
   }
 
+  const handleReadingMode = async () => {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+
+    await browser.tabs.setZoom(tab.id!, 2.6);
+
+    await browser.scripting.executeScript({
+      target: { tabId: tab.id! },
+      func: () => {
+        const header = document.querySelector<HTMLElement>("#header-container");
+        header?.remove();
+
+        const funbar = document.querySelector<HTMLElement>("#funbar");
+
+        if (funbar) {
+          funbar.style.top = "0";
+        }
+
+        const similarStoriesContainer = document.querySelector<HTMLElement>(".similar-stories-container");
+        similarStoriesContainer?.remove();
+
+        const readingWidgetsContainer = document.querySelectorAll<HTMLElement>(".reading-widget");
+        console.log(readingWidgetsContainer.length);
+        readingWidgetsContainer.forEach(container => container.remove());
+      }
+    });
+  }
+
   return (
     <>
       <div>
         <img src={logo} className="logo" alt="logo" />
       </div>
       <div className="card">
-        <button onClick={onClick} className={isTextCorrectorActive ? "active" : ""}>
+        <button onClick={handleTextCorrector} className={isTextCorrectorActive ? "active" : ""}>
           {isTextCorrectorActive ? "Corrector de texto activado" : "Corrector de texto desactivado"}
+        </button>
+
+        <button onClick={handleReadingMode}>
+          Modo lectura
         </button>
       </div>
     </>
