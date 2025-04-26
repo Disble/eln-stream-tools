@@ -6,7 +6,16 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: "ELN Stream Tools",
-    permissions: ['scripting'],
-    host_permissions: ["http://wattpad.com/*", "https://wattpad.com/*"]
+    permissions: [
+      'scripting',
+      'tabs',
+      'activeTab'
+    ],
+    host_permissions: [
+      "http://wattpad.com/*",
+      "https://wattpad.com/*",
+      "http://www.wattpad.com/*",
+      "https://www.wattpad.com/*"
+    ],
   }
 });
